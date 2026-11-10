@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ArrowUUpLeft, Plus, Trash } from '@phosphor-icons/react'
+import { Plus, Trash, X } from '@phosphor-icons/react'
 import { useSesion } from '../almacen'
 import { api } from '../api'
-import { Tabla } from '../componentes/Tabla'
+import { Tabla, type Columna } from '../componentes/Tabla'
+import { Aviso, Boton, Cabecera, Campo, Insignia, Modal, Tarjeta } from '../componentes/ui'
 import { aNumero, fecha, pesosExactos } from '../formato'
 import type { DeudorResumen, HistorialDeDeudor } from '../tipos'
 
@@ -10,6 +11,7 @@ import type { DeudorResumen, HistorialDeDeudor } from '../tipos'
 export function Deudas() {
   const esAdmin = useSesion((s) => s.usuario?.rol === 'ADMIN')
   const [deudores, setDeudores] = useState<DeudorResumen[]>([])
+  const [cargando, setCargando] = useState(true)
   const [historial, setHistorial] = useState<HistorialDeDeudor | null>(null)
   const [error, setError] = useState('')
   const [nuevaDeuda, setNuevaDeuda] = useState(false)
@@ -21,6 +23,7 @@ export function Deudas() {
       .listarDeudores()
       .then(setDeudores)
       .catch((e) => setError(e.message))
+      .finally(() => setCargando(false))
   }
 
   function abrirHistorial(id: number) {
@@ -37,11 +40,7 @@ export function Deudas() {
     e.preventDefault()
     setError('')
     try {
-      await api.registrarDeuda(
-        formaDeuda.nombreDeudor,
-        aNumero(formaDeuda.monto),
-        formaDeuda.descripcion,
-      )
+      await api.registrarDeuda(formaDeuda.nombreDeudor, aNumero(formaDeuda.monto), formaDeuda.descripcion)
       setNuevaDeuda(false)
       setFormaDeuda({ nombreDeudor: '', monto: '', descripcion: '' })
       cargarDeudores()
@@ -76,240 +75,185 @@ export function Deudas() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-stone-800">Fiado</h1>
-        {esAdmin && (
-          <button
-            onClick={() => setNuevaDeuda(true)}
-            className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-          >
-            <Plus size={18} /> Nueva venta fiada
-          </button>
-        )}
-      </div>
+  const columnas: Columna<DeudorResumen>[] = [
+    {
+      titulo: 'Deudor',
+      celda: (d) => <span className="font-medium text-stone-800">{d.nombreDeudor}</span>,
+    },
+    {
+      titulo: 'Deudas pendientes',
+      celda: (d) => <span className="tabular-nums text-stone-600">{d.deudasPendientes}</span>,
+    },
+    {
+      titulo: 'Total por cobrar',
+      derecha: true,
+      celda: (d) => <span className="font-semibold tabular-nums text-amber-700">{pesosExactos(d.totalPendiente)}</span>,
+    },
+    {
+      titulo: '',
+      derecha: true,
+      celda: (d) => (
+        <Boton variante="fantasma" onClick={() => abrirHistorial(d.id)} className="px-3 py-1.5 text-emerald-800">
+          Ver historial
+        </Boton>
+      ),
+    },
+  ]
 
-      {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-red-700">{error}</p>
-      )}
+  return (
+    <>
+      <Cabecera
+        titulo="Fiado"
+        subtitulo="Lo que los clientes deben a la tienda."
+        acciones={
+          esAdmin && (
+            <Boton onClick={() => setNuevaDeuda(true)}>
+              <Plus size={16} weight="bold" /> Nueva venta fiada
+            </Boton>
+          )
+        }
+      />
+
+      {error && <Aviso tono="error">{error}</Aviso>}
 
       <Tabla
         filas={deudores}
         llave={(d) => d.id}
-        columnas={[
-          {
-            titulo: 'Deudor',
-            celda: (d) => <span className="font-medium text-stone-700">{d.nombreDeudor}</span>,
-          },
-          {
-            titulo: 'Deudas pendientes',
-            celda: (d) => <span className="text-stone-600">{d.deudasPendientes}</span>,
-          },
-          {
-            titulo: 'Total por cobrar',
-            celda: (d) => <span className="text-amber-700">{pesosExactos(d.totalPendiente)}</span>,
-          },
-          {
-            titulo: '',
-            celda: (d) => (
-              <span className="block text-right">
-                <button
-                  onClick={() => abrirHistorial(d.id)}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
-                >
-                  Ver historial
-                </button>
-              </span>
-            ),
-          },
-        ]}
+        columnas={columnas}
+        mensajeVacio="Nadie tiene fiado pendiente."
+        cargando={cargando}
       />
 
       {historial && (
-        <section className="space-y-4 rounded-2xl bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-stone-700">
-              Historial de {historial.nombreDeudor}
-            </h2>
+        <Tarjeta className="space-y-5">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold text-stone-900">Historial de {historial.nombreDeudor}</h2>
             <button
+              type="button"
               onClick={() => setHistorial(null)}
-              className="text-sm text-stone-500 hover:underline"
+              aria-label="Cerrar historial"
+              className="rounded-md p-1.5 text-stone-500 hover:bg-stone-100"
             >
-              Cerrar
+              <X size={16} />
             </button>
           </div>
 
+          {historial.deudas.length === 0 && <p className="text-sm text-stone-500">Sin deudas registradas.</p>}
+
           {historial.deudas.map((deuda) => (
-            <article key={deuda.id} className="rounded-xl border border-stone-200 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <article key={deuda.id} className="rounded-xl border border-stone-200 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-medium text-stone-800">
+                  <p className="flex flex-wrap items-center gap-2 text-base font-semibold tabular-nums text-stone-900">
                     {pesosExactos(deuda.monto)}
-                    {!deuda.saldo && (
-                      <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">
-                        saldada
-                      </span>
-                    )}
+                    {deuda.saldo === 0 && <Insignia tono="verde">Saldada</Insignia>}
                   </p>
-                  <p className="text-sm text-stone-500">
+                  <p className="mt-0.5 text-sm text-stone-500">
                     {deuda.descripcion} · {fecha(deuda.fecha)}
                   </p>
                 </div>
-                {esAdmin && deuda.saldo > 0 && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        setFormaAbono({ id: deuda.id, monto: '', descripcion: '' })
-                      }
-                      className="flex items-center gap-1 rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+                <div className="flex items-center gap-1">
+                  {esAdmin && deuda.saldo > 0 && (
+                    <Boton
+                      onClick={() => setFormaAbono({ id: deuda.id, monto: '', descripcion: '' })}
+                      className="px-3 py-1.5 text-xs"
                     >
-                      <ArrowUUpLeft size={14} /> Abonar
-                    </button>
+                      Abonar
+                    </Boton>
+                  )}
+                  {esAdmin && (
                     <button
+                      type="button"
                       onClick={() => eliminarDeuda(deuda.id)}
-                      className="rounded-md px-2 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
+                      aria-label="Eliminar deuda"
+                      className="rounded-md p-2 text-stone-500 hover:bg-red-50 hover:text-red-700"
                     >
-                      <Trash size={14} className="inline" /> Eliminar
+                      <Trash size={16} />
                     </button>
-                  </div>
-                )}
-                {esAdmin && deuda.saldo === 0 && (
-                  <button
-                    onClick={() => eliminarDeuda(deuda.id)}
-                    className="rounded-md px-2 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50"
-                  >
-                    <Trash size={14} className="inline" /> Eliminar
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
-              <p className="mt-2 text-sm">
-                Saldo:{' '}
-                <span className="font-semibold text-amber-700">
-                  {pesosExactos(deuda.saldo)}
-                </span>
+
+              <p className="mt-3 text-sm text-stone-600">
+                Saldo pendiente:{' '}
+                <span className="font-semibold tabular-nums text-amber-700">{pesosExactos(deuda.saldo)}</span>
               </p>
+
               {deuda.pagos.length > 0 && (
-                <ul className="mt-2 space-y-1 border-l-2 border-stone-200 pl-3 text-sm text-stone-500">
+                <ul className="mt-3 space-y-1.5 border-l-2 border-emerald-200 pl-4 text-sm text-stone-600">
                   {deuda.pagos.map((pago) => (
-                    <li key={pago.id}>
-                      {pesosExactos(pago.monto)} · {fecha(pago.fecha)}
+                    <li key={pago.id} className="tabular-nums">
+                      Abono de {pesosExactos(pago.monto)} · {fecha(pago.fecha)}
                     </li>
                   ))}
                 </ul>
               )}
             </article>
           ))}
-        </section>
+        </Tarjeta>
       )}
 
       {nuevaDeuda && (
-        <form
-          onSubmit={guardarDeuda}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-        >
-          <div className="w-full max-w-sm space-y-4 rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-stone-800">Nueva venta fiada</h2>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-stone-600">Nombre del deudor</span>
-              <input
-                value={formaDeuda.nombreDeudor}
-                onChange={(e) =>
-                  setFormaDeuda({ ...formaDeuda, nombreDeudor: e.target.value })
-                }
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                placeholder="María Pérez"
-                required
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-stone-600">Monto</span>
-              <input
-                value={formaDeuda.monto}
-                onChange={(e) => setFormaDeuda({ ...formaDeuda, monto: e.target.value })}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                inputMode="decimal"
-                required
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-stone-600">Descripción</span>
-              <input
-                value={formaDeuda.descripcion}
-                onChange={(e) =>
-                  setFormaDeuda({ ...formaDeuda, descripcion: e.target.value })
-                }
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                placeholder="Mercado fiado…"
-                required
-              />
-            </label>
+        <Modal titulo="Nueva venta fiada" onCerrar={() => setNuevaDeuda(false)}>
+          <form onSubmit={guardarDeuda} className="space-y-4">
+            <Campo
+              etiqueta="Nombre del deudor"
+              value={formaDeuda.nombreDeudor}
+              onChange={(e) => setFormaDeuda({ ...formaDeuda, nombreDeudor: e.target.value })}
+              placeholder="María Pérez"
+              required
+              autoFocus
+            />
+            <Campo
+              etiqueta="Monto"
+              value={formaDeuda.monto}
+              onChange={(e) => setFormaDeuda({ ...formaDeuda, monto: e.target.value })}
+              inputMode="decimal"
+              required
+            />
+            <Campo
+              etiqueta="Descripción"
+              value={formaDeuda.descripcion}
+              onChange={(e) => setFormaDeuda({ ...formaDeuda, descripcion: e.target.value })}
+              placeholder="Mercado fiado…"
+              required
+            />
             <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setNuevaDeuda(false)}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
-              >
+              <Boton variante="fantasma" onClick={() => setNuevaDeuda(false)}>
                 Cancelar
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-              >
-                Guardar
-              </button>
+              </Boton>
+              <Boton type="submit">Guardar</Boton>
             </div>
-          </div>
-        </form>
+          </form>
+        </Modal>
       )}
 
       {formaAbono.id > 0 && (
-        <form
-          onSubmit={abonar}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-        >
-          <div className="w-full max-w-sm space-y-4 rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-stone-800">Abonar a la deuda</h2>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-stone-600">Monto del abono</span>
-              <input
-                value={formaAbono.monto}
-                onChange={(e) => setFormaAbono({ ...formaAbono, monto: e.target.value })}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                inputMode="decimal"
-                required
-                autoFocus
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-xs font-medium text-stone-600">Detalle (opcional)</span>
-              <input
-                value={formaAbono.descripcion}
-                onChange={(e) =>
-                  setFormaAbono({ ...formaAbono, descripcion: e.target.value })
-                }
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                placeholder="Abono parcial…"
-              />
-            </label>
+        <Modal titulo="Abonar a la deuda" onCerrar={() => setFormaAbono({ id: 0, monto: '', descripcion: '' })}>
+          <form onSubmit={abonar} className="space-y-4">
+            <Campo
+              etiqueta="Monto del abono"
+              value={formaAbono.monto}
+              onChange={(e) => setFormaAbono({ ...formaAbono, monto: e.target.value })}
+              inputMode="decimal"
+              required
+              autoFocus
+            />
+            <Campo
+              etiqueta="Detalle (opcional)"
+              value={formaAbono.descripcion}
+              onChange={(e) => setFormaAbono({ ...formaAbono, descripcion: e.target.value })}
+              placeholder="Abono parcial…"
+            />
             <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setFormaAbono({ id: 0, monto: '', descripcion: '' })}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
-              >
+              <Boton variante="fantasma" onClick={() => setFormaAbono({ id: 0, monto: '', descripcion: '' })}>
                 Cancelar
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-              >
-                Abonar
-              </button>
+              </Boton>
+              <Boton type="submit">Abonar</Boton>
             </div>
-          </div>
-        </form>
+          </form>
+        </Modal>
       )}
-    </div>
+    </>
   )
 }

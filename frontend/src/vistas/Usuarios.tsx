@@ -3,6 +3,7 @@ import { CheckCircle, Trash, XCircle } from '@phosphor-icons/react'
 import { useSesion } from '../almacen'
 import { api } from '../api'
 import { Tabla, type Columna } from '../componentes/Tabla'
+import { Aviso, Boton, Cabecera, Insignia, Tarjeta } from '../componentes/ui'
 import { fecha } from '../formato'
 import type { Rol, SolicitudAdmin, Usuario } from '../tipos'
 
@@ -13,6 +14,7 @@ export function Usuarios() {
   const yo = useSesion((s) => s.usuario)
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [solicitudes, setSolicitudes] = useState<SolicitudAdmin[]>([])
+  const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
 
@@ -20,12 +22,15 @@ export function Usuarios() {
 
   function cargar() {
     if (!esAdmin) {
+      setCargando(false)
       return
     }
+    setCargando(true)
     api
       .listarUsuarios()
       .then(setUsuarios)
       .catch((e) => setError(e.message))
+      .finally(() => setCargando(false))
     api
       .listarSolicitudes()
       .then(setSolicitudes)
@@ -78,6 +83,7 @@ export function Usuarios() {
 
   async function solicitarPermiso() {
     setError('')
+    setAviso('')
     try {
       await api.solicitarPermiso('Solicitud enviada desde la vista de usuarios.')
       setAviso('Tu solicitud quedó pendiente para un administrador.')
@@ -87,123 +93,117 @@ export function Usuarios() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-stone-800">Usuarios</h1>
+  const pendientes = solicitudes.filter((s) => s.estado === 'PENDIENTE')
 
-      {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-red-700">{error}</p>
-      )}
-      {aviso && (
-        <p className="rounded-lg bg-emerald-50 px-4 py-3 text-emerald-700">{aviso}</p>
-      )}
+  const columnas: Columna<Usuario>[] = [
+    {
+      titulo: 'Usuario',
+      celda: (u) => (
+        <span className="font-medium text-stone-800">
+          {u.nombreUsuario}
+          {u.id === yo?.id && <span className="ml-2 text-xs font-normal text-stone-400">(tú)</span>}
+        </span>
+      ),
+    },
+    {
+      titulo: 'Rol',
+      celda: (u) => (
+        <select
+          value={u.rol}
+          disabled={u.id === yo?.id}
+          aria-label={`Rol de ${u.nombreUsuario}`}
+          title={u.id === yo?.id ? 'No puedes cambiar tu propio rol' : undefined}
+          onChange={(e) => cambiarRol(u, e.target.value as Rol)}
+          className="rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-xs text-stone-800 focus:border-emerald-700 focus:outline-none disabled:opacity-50"
+        >
+          {ROLES.map((rol) => (
+            <option key={rol} value={rol}>
+              {rol}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      titulo: 'Registrado',
+      celda: (u) => <span className="text-stone-500">{fecha(u.fechaRegistro)}</span>,
+    },
+    {
+      titulo: '',
+      derecha: true,
+      celda: (u) => (
+        <button
+          type="button"
+          onClick={() => eliminar(u)}
+          disabled={u.id === yo?.id}
+          aria-label={`Eliminar ${u.nombreUsuario}`}
+          title={u.id === yo?.id ? 'No puedes eliminar tu propia cuenta' : undefined}
+          className="rounded-md p-2 text-stone-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+        >
+          <Trash size={16} />
+        </button>
+      ),
+    },
+  ]
+
+  return (
+    <>
+      <Cabecera titulo="Usuarios" subtitulo="Cuentas de la tienda y permisos de administrador." />
+
+      {error && <Aviso tono="error">{error}</Aviso>}
+      {aviso && <Aviso tono="exito">{aviso}</Aviso>}
 
       {yo?.rol === 'REGISTRADO' && (
-        <div className="rounded-2xl bg-white p-6 text-sm shadow-sm">
-          <p className="text-stone-600">
-            Como usuario registrado puedes pedir el permiso de administrador para
-            administrar inventario, caja y fiado.
+        <Tarjeta className="flex flex-wrap items-center justify-between gap-4">
+          <p className="max-w-xl text-sm text-stone-600">
+            Como usuario registrado puedes pedir permiso de administrador para gestionar inventario, caja y
+            fiado.
           </p>
-          <button
-            onClick={solicitarPermiso}
-            className="mt-3 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
-          >
-            Solicitar permiso de administrador
-          </button>
-        </div>
+          <Boton variante="secundario" onClick={solicitarPermiso}>
+            Solicitar permiso
+          </Boton>
+        </Tarjeta>
       )}
 
-      {esAdmin && solicitudes.some((s) => s.estado === 'PENDIENTE') && (
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 className="mb-4 font-semibold text-stone-700">Solicitudes pendientes</h2>
-          <ul className="space-y-3">
-            {solicitudes
-              .filter((s) => s.estado === 'PENDIENTE')
-              .map((s) => (
-                <li
-                  key={s.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 p-4"
-                >
+      {esAdmin && pendientes.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-500">
+            Solicitudes pendientes ({pendientes.length})
+          </h2>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {pendientes.map((s) => (
+              <li key={s.id}>
+                <Tarjeta className="flex h-full flex-col gap-4">
                   <div>
-                    <p className="font-medium text-stone-800">{s.nombreUsuario}</p>
-                    <p className="text-sm text-stone-500">
+                    <p className="font-medium text-stone-900">{s.nombreUsuario}</p>
+                    <p className="mt-1 text-sm text-stone-500">
                       {s.motivo || 'Sin motivo'} · {fecha(s.fechaSolicitud)}
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => decidir(s.id, true)}
-                      className="flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
-                    >
+                  <div className="mt-auto flex gap-2">
+                    <Boton onClick={() => decidir(s.id, true)} className="px-3 py-1.5 text-xs">
                       <CheckCircle size={14} /> Aprobar
-                    </button>
-                    <button
-                      onClick={() => decidir(s.id, false)}
-                      className="flex items-center gap-1 rounded-lg bg-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-300"
-                    >
+                    </Boton>
+                    <Boton variante="secundario" onClick={() => decidir(s.id, false)} className="px-3 py-1.5 text-xs">
                       <XCircle size={14} /> Rechazar
-                    </button>
+                    </Boton>
                   </div>
-                </li>
-              ))}
+                </Tarjeta>
+              </li>
+            ))}
           </ul>
         </section>
       )}
 
       {esAdmin && (
-      <Tabla
-        filas={usuarios}
-        llave={(u) => u.id}
-        columnas={[
-          {
-            titulo: 'Usuario',
-            celda: (u) => <span className="text-stone-700">{u.nombreUsuario}</span>,
-          },
-          {
-            titulo: 'Rol',
-            celda: (u) => (
-              <select
-                value={u.rol}
-                disabled={u.id === yo?.id}
-                aria-label={`Rol de ${u.nombreUsuario}`}
-                title={u.id === yo?.id ? 'No puedes cambiar tu propio rol' : undefined}
-                onChange={(e) => cambiarRol(u, e.target.value as Rol)}
-                className="rounded-md border border-stone-300 px-2 py-1 text-xs disabled:opacity-50"
-              >
-                {ROLES.map((rol) => (
-                  <option key={rol} value={rol}>
-                    {rol}
-                  </option>
-                ))}
-              </select>
-            ),
-          },
-          {
-            titulo: 'Registrado',
-            celda: (u) => <span className="text-stone-500">{fecha(u.fechaRegistro)}</span>,
-          },
-          ...(esAdmin
-            ? [
-                {
-                  titulo: '',
-                  celda: (u: Usuario) => (
-                    <span className="block text-right">
-                      <button
-                        onClick={() => eliminar(u)}
-                        disabled={u.id === yo?.id}
-                        title={u.id === yo?.id ? 'No puedes eliminar tu propia cuenta' : undefined}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-40"
-                      >
-                        <Trash size={14} className="inline" /> Eliminar
-                      </button>
-                    </span>
-                  ),
-                } satisfies Columna<Usuario>,
-              ]
-            : []),
-        ]}
-      />
+        <Tabla filas={usuarios} llave={(u) => u.id} columnas={columnas} cargando={cargando} />
       )}
-    </div>
+
+      {yo?.rol === 'REGISTRADO' && (
+        <p className="text-sm text-stone-500">
+          <Insignia tono="gris">Acceso limitado</Insignia> La lista de cuentas es solo para administradores.
+        </p>
+      )}
+    </>
   )
 }

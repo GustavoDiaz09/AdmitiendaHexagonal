@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { MagnifyingGlass, Plus, Trash } from '@phosphor-icons/react'
+import { MagnifyingGlass, PencilSimple, Plus, Trash } from '@phosphor-icons/react'
 import { useSesion } from '../almacen'
 import { api } from '../api'
 import { Tabla, type Columna } from '../componentes/Tabla'
+import { Aviso, Boton, Cabecera, Campo, Insignia, Modal } from '../componentes/ui'
 import { aNumero, pesosExactos } from '../formato'
 import type { Producto } from '../tipos'
 
@@ -29,15 +30,18 @@ export function Productos() {
   const esAdmin = useSesion((s) => s.usuario?.rol === 'ADMIN')
   const [productos, setProductos] = useState<Producto[]>([])
   const [busqueda, setBusqueda] = useState('')
+  const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [editando, setEditando] = useState<Producto | null>(null)
   const [formulario, setFormulario] = useState<Formulario | null>(null)
 
   function cargar(filtro = '') {
+    setCargando(true)
     api
       .listarProductos(filtro || undefined)
       .then(setProductos)
       .catch((e) => setError(e.message))
+      .finally(() => setCargando(false))
   }
 
   useEffect(() => {
@@ -97,199 +101,169 @@ export function Productos() {
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-stone-800">Productos</h1>
-        {esAdmin && (
-          <button
-            onClick={abrirNuevo}
-            className="flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-          >
-            <Plus size={18} /> Nuevo producto
-          </button>
-        )}
-      </div>
+  const columnas: Columna<Producto>[] = [
+    {
+      titulo: 'Producto',
+      celda: (p) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium text-stone-800">{p.nombreProducto}</span>
+          {p.enAlerta && <Insignia tono="ambar">Stock bajo</Insignia>}
+        </div>
+      ),
+    },
+    { titulo: 'Tipo', celda: (p) => <span className="text-stone-600">{p.tipoProducto}</span> },
+    {
+      titulo: 'Precio de venta',
+      derecha: true,
+      celda: (p) => <span className="tabular-nums text-stone-900">{pesosExactos(p.precioVenta)}</span>,
+    },
+    {
+      titulo: 'Existencias',
+      derecha: true,
+      celda: (p) => (
+        <span className="tabular-nums text-stone-600">
+          {p.cantidadStock} <span className="text-stone-400">/ mín. {p.stockMinimo}</span>
+        </span>
+      ),
+    },
+  ]
 
-      {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-red-700">{error}</p>
-      )}
+  if (esAdmin) {
+    columnas.push({
+      titulo: 'Acciones',
+      derecha: true,
+      celda: (p) => (
+        <span className="inline-flex gap-1">
+          <button
+            type="button"
+            onClick={() => abrirEdicion(p)}
+            aria-label={`Editar ${p.nombreProducto}`}
+            className="rounded-md p-2 text-stone-500 hover:bg-emerald-50 hover:text-emerald-800"
+          >
+            <PencilSimple size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => eliminar(p)}
+            aria-label={`Eliminar ${p.nombreProducto}`}
+            className="rounded-md p-2 text-stone-500 hover:bg-red-50 hover:text-red-700"
+          >
+            <Trash size={16} />
+          </button>
+        </span>
+      ),
+    })
+  }
+
+  return (
+    <>
+      <Cabecera
+        titulo="Productos"
+        subtitulo="Catálogo, precios y existencias."
+        acciones={
+          esAdmin && (
+            <Boton onClick={abrirNuevo}>
+              <Plus size={16} weight="bold" /> Nuevo producto
+            </Boton>
+          )
+        }
+      />
+
+      {error && <Aviso tono="error">{error}</Aviso>}
 
       <form
+        role="search"
         onSubmit={(e) => {
           e.preventDefault()
           cargar(busqueda)
         }}
         className="flex max-w-md gap-2"
       >
-        <input
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="Buscar por nombre…"
-          className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-        />
-        <button className="flex items-center gap-1 rounded-lg bg-stone-200 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-300">
-          <MagnifyingGlass size={16} /> Buscar
-        </button>
+        <label className="relative w-full">
+          <span className="sr-only">Buscar producto por nombre</span>
+          <MagnifyingGlass
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
+          />
+          <input
+            type="search"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar por nombre…"
+            className="w-full rounded-lg border border-stone-300 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-stone-400 focus:border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-700/20"
+          />
+        </label>
+        <Boton variante="secundario">Buscar</Boton>
       </form>
 
       <Tabla
         filas={productos}
         llave={(p) => p.id}
-        columnas={[
-          {
-            titulo: 'Producto',
-            celda: (p) => (
-              <span className="text-stone-700">
-                {p.nombreProducto}
-                {p.enAlerta && (
-                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
-                    stock bajo
-                  </span>
-                )}
-              </span>
-            ),
-          },
-          { titulo: 'Tipo', celda: (p) => <span className="text-stone-600">{p.tipoProducto}</span> },
-          {
-            titulo: 'Precio de venta',
-            celda: (p) => <span className="text-stone-800">{pesosExactos(p.precioVenta)}</span>,
-          },
-          {
-            titulo: 'Existencias',
-            celda: (p) => (
-              <span className="text-stone-600">
-                {p.cantidadStock} / mín. {p.stockMinimo}
-              </span>
-            ),
-          },
-          ...(esAdmin
-            ? [
-                {
-                  titulo: 'Acciones',
-                  celda: (p: Producto) => (
-                    <span className="space-x-2">
-                      <button
-                        onClick={() => abrirEdicion(p)}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => eliminar(p)}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-                      >
-                        <Trash size={14} className="inline" /> Eliminar
-                      </button>
-                    </span>
-                  ),
-                } satisfies Columna<Producto>,
-              ]
-            : []),
-        ]}
-        mensajeVacio="Sin resultados."
+        columnas={columnas}
+        mensajeVacio="No hay productos que coincidan."
+        cargando={cargando}
       />
 
       {formulario && (
-        <form
-          onSubmit={guardar}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-        >
-          <div className="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-stone-800">
-              {editando ? 'Editar producto' : 'Nuevo producto'}
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="col-span-2 space-y-1">
-                <span className="text-xs font-medium text-stone-600">Nombre</span>
-                <input
+        <Modal titulo={editando ? 'Editar producto' : 'Nuevo producto'} onCerrar={() => setFormulario(null)}>
+          <form onSubmit={guardar} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <Campo
+                  etiqueta="Nombre"
                   value={formulario.nombreProducto}
-                  onChange={(e) =>
-                    setFormulario({ ...formulario, nombreProducto: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                  onChange={(e) => setFormulario({ ...formulario, nombreProducto: e.target.value })}
                   required
+                  autoFocus
                 />
-              </label>
-              <label className="col-span-2 space-y-1">
-                <span className="text-xs font-medium text-stone-600">Tipo</span>
-                <input
+              </div>
+              <div className="col-span-2">
+                <Campo
+                  etiqueta="Tipo"
                   value={formulario.tipoProducto}
-                  onChange={(e) =>
-                    setFormulario({ ...formulario, tipoProducto: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+                  onChange={(e) => setFormulario({ ...formulario, tipoProducto: e.target.value })}
                   placeholder="Abarrotes, Dulces…"
                   required
                 />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-medium text-stone-600">Precio neto</span>
-                <input
-                  value={formulario.precioNeto}
-                  onChange={(e) =>
-                    setFormulario({ ...formulario, precioNeto: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                  inputMode="decimal"
-                  required
-                />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-medium text-stone-600">Ganancia</span>
-                <input
-                  value={formulario.ganancia}
-                  onChange={(e) =>
-                    setFormulario({ ...formulario, ganancia: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                  inputMode="decimal"
-                  required
-                />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-medium text-stone-600">Existencias</span>
-                <input
-                  value={formulario.cantidadStock}
-                  onChange={(e) =>
-                    setFormulario({ ...formulario, cantidadStock: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                  inputMode="numeric"
-                  required
-                />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-medium text-stone-600">Mínimo</span>
-                <input
-                  value={formulario.stockMinimo}
-                  onChange={(e) =>
-                    setFormulario({ ...formulario, stockMinimo: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
-                  inputMode="numeric"
-                  required
-                />
-              </label>
+              </div>
+              <Campo
+                etiqueta="Precio neto"
+                value={formulario.precioNeto}
+                onChange={(e) => setFormulario({ ...formulario, precioNeto: e.target.value })}
+                inputMode="decimal"
+                required
+              />
+              <Campo
+                etiqueta="Ganancia"
+                value={formulario.ganancia}
+                onChange={(e) => setFormulario({ ...formulario, ganancia: e.target.value })}
+                inputMode="decimal"
+                required
+              />
+              <Campo
+                etiqueta="Existencias"
+                value={formulario.cantidadStock}
+                onChange={(e) => setFormulario({ ...formulario, cantidadStock: e.target.value })}
+                inputMode="numeric"
+                required
+              />
+              <Campo
+                etiqueta="Mínimo"
+                value={formulario.stockMinimo}
+                onChange={(e) => setFormulario({ ...formulario, stockMinimo: e.target.value })}
+                inputMode="numeric"
+                required
+              />
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setFormulario(null)}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100"
-              >
+              <Boton variante="fantasma" onClick={() => setFormulario(null)}>
                 Cancelar
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-              >
-                Guardar
-              </button>
+              </Boton>
+              <Boton type="submit">Guardar</Boton>
             </div>
-          </div>
-        </form>
+          </form>
+        </Modal>
       )}
-    </div>
+    </>
   )
 }

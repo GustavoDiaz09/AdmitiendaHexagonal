@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Storefront } from '@phosphor-icons/react'
 import { api } from '../api'
+import { Aviso, Boton, Campo } from '../componentes/ui'
 
 /** Pantalla de registro de cuenta nueva (rol REGISTRADO). */
 export function Registro() {
@@ -9,83 +11,78 @@ export function Registro() {
   const [contrasena, setContrasena] = useState('')
   const [indicio, setIndicio] = useState('')
   const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setEnviando(true)
     try {
       await api.registrarUsuario(nombreUsuario, contrasena, indicio)
       navegar('/login')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo crear la cuenta.')
+    } finally {
+      setEnviando(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-stone-100 p-4">
-      <form
-        onSubmit={enviar}
-        className="w-full max-w-sm space-y-5 rounded-2xl bg-white p-8 shadow-sm"
-      >
-        <h1 className="text-2xl font-bold text-stone-800">Crear cuenta</h1>
-        <p className="text-sm text-stone-500">
-          Podrás ver caja, fiado e inventario; un administrador puede darte permiso
-          total.
-        </p>
+    <div className="flex min-h-screen items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-800 text-white">
+            <Storefront size={26} weight="fill" />
+          </span>
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-stone-900">Crear cuenta</h1>
+          <p className="mt-1 text-sm text-stone-500">
+            Verás caja, fiado e inventario. Un administrador puede darte permiso total.
+          </p>
+        </div>
 
-        <label className="block space-y-1">
-          <span className="text-sm font-medium text-stone-600">Usuario</span>
-          <input
+        <form
+          onSubmit={enviar}
+          className="space-y-5 rounded-2xl border border-stone-200/80 bg-white p-7"
+        >
+          <Campo
+            etiqueta="Usuario"
             value={nombreUsuario}
             onChange={(e) => setNombreUsuario(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-emerald-600 focus:outline-none"
             minLength={3}
+            autoComplete="username"
             required
           />
-        </label>
-
-        <label className="block space-y-1">
-          <span className="text-sm font-medium text-stone-600">Contraseña</span>
-          <input
+          <Campo
+            etiqueta="Contraseña"
             type="password"
             value={contrasena}
             onChange={(e) => setContrasena(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-emerald-600 focus:outline-none"
             minLength={6}
+            autoComplete="new-password"
+            ayuda="Mínimo 6 caracteres."
             required
           />
-        </label>
-
-        <label className="block space-y-1">
-          <span className="text-sm font-medium text-stone-600">
-            Indicio (opcional)
-          </span>
-          <input
+          <Campo
+            etiqueta="Indicio (opcional)"
             value={indicio}
             onChange={(e) => setIndicio(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-emerald-600 focus:outline-none"
             placeholder="¿Qué te ayuda a recordar la contraseña?"
           />
-        </label>
 
-        {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
-        )}
+          {error && <Aviso tono="error">{error}</Aviso>}
 
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-emerald-700 py-2.5 font-semibold text-white transition hover:bg-emerald-800"
-        >
-          Crear cuenta
-        </button>
+          <Boton type="submit" disabled={enviando} className="w-full py-2.5">
+            {enviando ? 'Creando…' : 'Crear cuenta'}
+          </Boton>
+        </form>
 
-        <p className="text-center text-sm text-stone-500">
+        <p className="mt-6 text-center text-sm text-stone-500">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="font-medium text-emerald-700 hover:underline">
+          <Link to="/login" className="font-medium text-emerald-800 hover:underline">
             Entra aquí
           </Link>
         </p>
-      </form>
+      </div>
     </div>
   )
 }

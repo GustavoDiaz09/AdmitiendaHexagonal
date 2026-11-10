@@ -29,6 +29,27 @@ export function pesosExactos(monto: number): string {
   return texto.endsWith(',00') ? formatoPesos.format(monto) : texto
 }
 
+const etiquetaDiaCorta = new Intl.DateTimeFormat('es-CO', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+})
+
+const etiquetaMes = new Intl.DateTimeFormat('es-CO', {
+  month: 'long',
+  year: 'numeric',
+})
+
+/** "2026-11-03" -> "mar 3 nov". Mediodía evita desfases de zona horaria. */
+export function etiquetaDia(iso: string): string {
+  return etiquetaDiaCorta.format(new Date(`${iso}T12:00:00`))
+}
+
+/** "2026-11" -> "noviembre de 2026". */
+export function etiquetaDeMes(iso: string): string {
+  return etiquetaMes.format(new Date(`${iso}-01T12:00:00`))
+}
+
 /** Fecha legible en hora Colombia. */
 export function fecha(milisegundos: number): string {
   return formatoDia.format(new Date(milisegundos))

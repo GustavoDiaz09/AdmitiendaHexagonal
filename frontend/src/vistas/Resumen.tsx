@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { Aviso, Cabecera, Estadistica } from '../componentes/ui'
 import { Tabla, type Columna } from '../componentes/Tabla'
-import { pesos } from '../formato'
+import { etiquetaDeMes, etiquetaDia, pesos } from '../formato'
 import type { Resumen as ResumenDeTienda, ResumenPorDia, ResumenPorMes } from '../tipos'
 
 /** Columnas compartidas por las tablas de días y de meses. */
@@ -10,19 +11,22 @@ function columnasDeTotales<T extends { ingresos: number; egresos: number; neto: 
   etiqueta: (fila: T) => string,
 ): Columna<T>[] {
   return [
-    { titulo, celda: (fila) => <span className="text-stone-700">{etiqueta(fila)}</span> },
+    { titulo, celda: (fila) => <span className="font-medium text-stone-800">{etiqueta(fila)}</span> },
     {
       titulo: 'Ingresos',
-      celda: (fila) => <span className="text-emerald-700">{pesos(fila.ingresos)}</span>,
+      derecha: true,
+      celda: (fila) => <span className="tabular-nums text-emerald-800">{pesos(fila.ingresos)}</span>,
     },
     {
       titulo: 'Egresos',
-      celda: (fila) => <span className="text-red-700">{pesos(fila.egresos)}</span>,
+      derecha: true,
+      celda: (fila) => <span className="tabular-nums text-red-700">{pesos(fila.egresos)}</span>,
     },
     {
       titulo: 'Neto',
+      derecha: true,
       celda: (fila) => (
-        <span className={`font-medium ${fila.neto < 0 ? 'text-red-700' : 'text-stone-800'}`}>
+        <span className={`font-semibold tabular-nums ${fila.neto < 0 ? 'text-red-700' : 'text-stone-900'}`}>
           {pesos(fila.neto)}
         </span>
       ),
@@ -43,50 +47,47 @@ export function Resumen() {
   }, [])
 
   if (error) {
-    return <p className="rounded-lg bg-red-50 px-4 py-3 text-red-700">{error}</p>
-  }
-  if (!resumen) {
-    return <p className="text-stone-500">Cargando el resumen…</p>
+    return <Aviso tono="error">{error}</Aviso>
   }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-stone-800">Resumen de la tienda</h1>
+    <>
+      <Cabecera titulo="Resumen" subtitulo="Cómo va la tienda hoy." />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-stone-500">Saldo en caja</p>
-          <p className="mt-1 text-3xl font-bold text-stone-800">
-            {pesos(resumen.saldoCaja)}
-          </p>
+      {resumen ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Estadistica
+            etiqueta="Saldo en caja"
+            valor={pesos(resumen.saldoCaja)}
+            tono={resumen.saldoCaja < 0 ? 'negativo' : 'positivo'}
+          />
+          <Estadistica etiqueta="Fiado por cobrar" valor={pesos(resumen.totalPorCobrar)} tono="alerta" />
         </div>
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-stone-500">Fiado por cobrar</p>
-          <p className="mt-1 text-3xl font-bold text-amber-700">
-            {pesos(resumen.totalPorCobrar)}
-          </p>
-        </div>
-      </div>
+      ) : (
+        <p className="text-sm text-stone-500">Cargando el resumen…</p>
+      )}
 
-      <section>
-        <h2 className="mb-4 font-semibold text-stone-700">Últimos 7 días</h2>
-        <Tabla
-          filas={resumen.porDia}
-          columnas={columnasDeTotales<ResumenPorDia>('Día', (dia) => dia.fecha)}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-500">Últimos 7 días</h2>
+        <Tabla<ResumenPorDia>
+          filas={resumen?.porDia ?? []}
+          columnas={columnasDeTotales<ResumenPorDia>('Día', (dia) => etiquetaDia(dia.fecha))}
           llave={(dia) => dia.fecha}
           mensajeVacio="Sin movimientos esta semana."
+          cargando={!resumen}
         />
       </section>
 
-      <section>
-        <h2 className="mb-4 font-semibold text-stone-700">Últimos 12 meses</h2>
-        <Tabla
-          filas={resumen.porMes}
-          columnas={columnasDeTotales<ResumenPorMes>('Mes', (mes) => mes.mes)}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-500">Últimos 12 meses</h2>
+        <Tabla<ResumenPorMes>
+          filas={resumen?.porMes ?? []}
+          columnas={columnasDeTotales<ResumenPorMes>('Mes', (mes) => etiquetaDeMes(mes.mes))}
           llave={(mes) => mes.mes}
           mensajeVacio="Sin movimientos este año."
+          cargando={!resumen}
         />
       </section>
-    </div>
+    </>
   )
 }

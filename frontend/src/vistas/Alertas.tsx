@@ -1,33 +1,41 @@
 import { useEffect, useState } from 'react'
-import { Warning } from '@phosphor-icons/react'
+import { CheckCircle, Warning } from '@phosphor-icons/react'
 import { api } from '../api'
 import { Tabla, type Columna } from '../componentes/Tabla'
+import { Aviso, Cabecera, Insignia, Tarjeta } from '../componentes/ui'
 import type { Alerta as AlertaDeInventario } from '../tipos'
 
 const COLUMNAS: Columna<AlertaDeInventario>[] = [
   {
     titulo: 'Producto',
-    celda: (a) => (
-      <span className="flex items-center gap-2 text-stone-700">
-        <Warning size={16} className="text-amber-600" /> {a.nombreProducto}
-      </span>
-    ),
+    celda: (a) => <span className="font-medium text-stone-800">{a.nombreProducto}</span>,
   },
   { titulo: 'Tipo', celda: (a) => <span className="text-stone-600">{a.tipoProducto}</span> },
   {
     titulo: 'Existencias',
-    celda: (a) => <span className="font-medium text-red-700">{a.cantidadStock}</span>,
+    derecha: true,
+    celda: (a) => (
+      <Insignia tono="rojo">
+        <Warning size={12} weight="fill" /> {a.cantidadStock}
+      </Insignia>
+    ),
   },
-  { titulo: 'Mínimo', celda: (a) => <span className="text-stone-600">{a.stockMinimo}</span> },
+  {
+    titulo: 'Mínimo',
+    derecha: true,
+    celda: (a) => <span className="tabular-nums text-stone-600">{a.stockMinimo}</span>,
+  },
   {
     titulo: 'Faltante',
-    celda: (a) => <span className="text-stone-800">{a.faltante}</span>,
+    derecha: true,
+    celda: (a) => <span className="font-semibold tabular-nums text-stone-900">{a.faltante}</span>,
   },
 ]
 
 /** Productos con existencias al mínimo o menos. */
 export function Alertas() {
   const [alertas, setAlertas] = useState<AlertaDeInventario[]>([])
+  const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -35,27 +43,40 @@ export function Alertas() {
       .alertas()
       .then(setAlertas)
       .catch((e) => setError(e.message))
+      .finally(() => setCargando(false))
   }, [])
 
-  if (error) {
-    return <p className="rounded-lg bg-red-50 px-4 py-3 text-red-700">{error}</p>
-  }
-
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-stone-800">Alertas de inventario</h1>
+    <>
+      <Cabecera
+        titulo="Alertas de inventario"
+        subtitulo={
+          cargando
+            ? 'Revisando existencias…'
+            : `${alertas.length} producto${alertas.length === 1 ? '' : 's'} al mínimo o por debajo.`
+        }
+      />
 
-      {alertas.length === 0 ? (
-        <p className="rounded-2xl bg-white p-6 text-stone-500 shadow-sm">
-          Todo el inventario está por encima del mínimo.
-        </p>
+      {error && <Aviso tono="error">{error}</Aviso>}
+
+      {!cargando && !error && alertas.length === 0 ? (
+        <Tarjeta className="flex items-center gap-4">
+          <span className="flex size-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+            <CheckCircle size={22} weight="fill" />
+          </span>
+          <div>
+            <p className="font-medium text-stone-900">Inventario en orden</p>
+            <p className="text-sm text-stone-500">Todo está por encima del mínimo.</p>
+          </div>
+        </Tarjeta>
       ) : (
         <Tabla
           filas={alertas}
           columnas={COLUMNAS}
           llave={(a) => a.id}
+          cargando={cargando}
         />
       )}
-    </div>
+    </>
   )
 }

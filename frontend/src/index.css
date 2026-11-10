@@ -1,11 +1,18 @@
 @import "tailwindcss";
 
-/* Tipografía base de Admitienda */
+/* Base visual de Admitienda: fondo cálido, tipografía del sistema y números tabulares. */
 :root {
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   color-scheme: light;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
   margin: 0;
+  background: #f5f3ee;
+  color: #1c1917;
+}
+
+::selection {
+  background: #d1fae5;
 }
