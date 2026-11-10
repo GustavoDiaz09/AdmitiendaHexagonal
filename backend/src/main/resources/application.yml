@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: admitienda
+  datasource:
+    url: jdbc:sqlite:admitienda.db
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      # SQLite solo permite un escritor a la vez: un único dominio de
+      # conexión evita errores SQLITE_BUSY sin sacrificar el uso local.
+      maximum-pool-size: 1
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 8080
+
+admitienda:
+  cors-origenes:
+    - http://localhost:5173
+    - http://127.0.0.1:5173
+  duracion-sesion-horas: 24
+  admin-inicial:
+    nombre-usuario: admin
+    contrasena: admin123
