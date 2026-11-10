@@ -13,20 +13,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Adaptador de salida: sesiones de usuario en memoria con token opaco.
- * Cada token vive 24 horas; los vencidos se descartan al consultarse.
- * Con sessión en memoria reiniciar el servidor cierra todas las sesiones,
- * lo que para esta tienda es aceptable (los clientes vuelven a entrar).
+ * La duración se inyecta por configuración; los tokens vencidos se
+ * descartan al consultarse. Con sesión en memoria reiniciar el servidor
+ * cierra todas las sesiones, lo que para esta tienda es aceptable (los
+ * clientes vuelven a entrar).
  */
 public final class AdaptadorSesionesEnMemoria implements Sesiones {
 
-    private static final long DURACION = 24L * 60 * 60 * 1000;
-
     private final Map<String, SesionViva> sesiones = new ConcurrentHashMap<>();
     private final Reloj reloj;
+    private final long duracionMilis;
     private final SecureRandom azar = new SecureRandom();
 
-    public AdaptadorSesionesEnMemoria(Reloj reloj) {
+    public AdaptadorSesionesEnMemoria(Reloj reloj, long duracionMilis) {
         this.reloj = reloj;
+        this.duracionMilis = duracionMilis;
     }
 
     @Override
@@ -35,7 +36,7 @@ public final class AdaptadorSesionesEnMemoria implements Sesiones {
         azar.nextBytes(bytes);
         String token = HexFormat.of().formatHex(bytes);
         sesiones.put(token, new SesionViva(usuario.id(), usuario.nombreUsuario(),
-                usuario.rol(), reloj.ahora() + DURACION));
+                usuario.rol(), reloj.ahora() + duracionMilis));
         return token;
     }
 
