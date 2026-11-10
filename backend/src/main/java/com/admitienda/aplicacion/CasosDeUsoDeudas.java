@@ -73,10 +73,11 @@ public final class CasosDeUsoDeudas implements GestionDeDeudas {
             throw new ReglaDeNegocioException("El monto de la deuda debe ser mayor a 0.");
         }
         String normalizado = Validaciones.normalizarNombre(nombre);
+        String nombreLimpio = nombre.trim().replaceAll("\\s+", " ");
         return unidadDeTrabajo.ejecutar(() -> {
             Deudor deudor = deudores.buscarPorNombreNormalizado(normalizado)
                     .orElseGet(() -> deudores.guardar(
-                            new Deudor(null, nombre.trim(), normalizado)));
+                            new Deudor(null, nombreLimpio, normalizado)));
             Deuda nueva = new Deuda(null, deudor.id(), deudor.nombreDeudor(), monto, monto,
                     descripcionLimpia, reloj.ahora());
             return deudas.guardar(nueva);

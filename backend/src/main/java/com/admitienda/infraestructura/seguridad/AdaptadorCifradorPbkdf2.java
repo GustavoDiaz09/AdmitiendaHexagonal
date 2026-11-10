@@ -38,12 +38,12 @@ public final class AdaptadorCifradorPbkdf2 implements CifradorDeContrasenas {
     public boolean verificar(String contrasena, Credenciales almacenadas) {
         try {
             String[] partes = almacenadas.hash().split("\\$");
-            if (partes.length != 4 || !FORMATO.equals(partes[0])) {
+            if (partes.length != 3 || !FORMATO.equals(partes[0])) {
                 return false;
             }
             int iteraciones = Integer.parseInt(partes[1]);
-            byte[] sal = HexFormat.of().parseHex(partes[2]);
-            byte[] esperado = HexFormat.of().parseHex(partes[3]);
+            byte[] sal = HexFormat.of().parseHex(almacenadas.sal());
+            byte[] esperado = HexFormat.of().parseHex(partes[2]);
             byte[] calculado = derivar(contrasena, sal, iteraciones);
             return MessageDigest.isEqual(esperado, calculado);
         } catch (IllegalArgumentException e) {
