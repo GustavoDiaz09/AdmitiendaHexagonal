@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+/* Tipografía base de Admitienda */
+:root {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+}
