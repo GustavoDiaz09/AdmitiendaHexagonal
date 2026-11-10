@@ -2,48 +2,49 @@
 @import "tailwindcss";
 
 /*
- * Paleta "menta y coral": verdes vivos y neutros cálidos. Sobreescribe la
- * paleta por defecto, así todas las vistas heredan el tema.
+ * Paleta "azul y celeste": las clases "emerald" del código ahora pintan azules
+ * (sobreescritura del tema), así todas las vistas heredan el color sin tocarlas.
+ * Los neutros "stone" son celestes grisáceos muy claros.
  */
 @theme {
   --font-sans: "Nunito", "Segoe UI", system-ui, sans-serif;
   --font-display: "Nunito", "Segoe UI", system-ui, sans-serif;
 
-  --color-stone-50: #fffdf8;
-  --color-stone-100: #fff6ea;
-  --color-stone-200: #f5e6d3;
-  --color-stone-300: #e6d0b4;
-  --color-stone-400: #b9a089;
-  --color-stone-500: #8a7360;
-  --color-stone-600: #6b5847;
-  --color-stone-700: #4f4034;
-  --color-stone-800: #352c24;
-  --color-stone-900: #221c17;
+  --color-stone-50: #f8fcff;
+  --color-stone-100: #eef7fc;
+  --color-stone-200: #d6e9f5;
+  --color-stone-300: #b5d4e8;
+  --color-stone-400: #86afc8;
+  --color-stone-500: #5f8aa6;
+  --color-stone-600: #46697f;
+  --color-stone-700: #33506a;
+  --color-stone-800: #22384d;
+  --color-stone-900: #142536;
 
-  --color-emerald-50: #ecfdf5;
-  --color-emerald-100: #d1fae5;
-  --color-emerald-200: #a7f3d0;
-  --color-emerald-300: #6ee7b7;
-  --color-emerald-400: #34d399;
-  --color-emerald-500: #14b77f;
-  --color-emerald-600: #0e9f6e;
-  --color-emerald-700: #0b8a5e;
-  --color-emerald-800: #0a7150;
-  --color-emerald-900: #095d43;
-  --color-emerald-950: #053d2c;
+  --color-emerald-50: #f0f9ff;
+  --color-emerald-100: #e0f2fe;
+  --color-emerald-200: #bae6fd;
+  --color-emerald-300: #7dd3fc;
+  --color-emerald-400: #38bdf8;
+  --color-emerald-500: #0ea5e9;
+  --color-emerald-600: #0284c7;
+  --color-emerald-700: #0369a1;
+  --color-emerald-800: #075985;
+  --color-emerald-900: #0c4a6e;
+  --color-emerald-950: #082f49;
 }
 
 :root {
   color-scheme: light;
   -webkit-font-smoothing: antialiased;
   /* Zoom general: todo el tamaño de Tailwind (rem) crece con la raíz. */
-  font-size: 18px;
+  font-size: 20px;
 }
 
 body {
   margin: 0;
-  background: #fff6ea;
-  color: #221c17;
+  background: #f0f9ff;
+  color: #142536;
   font-family: var(--font-sans);
 }
 
@@ -54,5 +55,5 @@ h2 {
 }
 
 ::selection {
-  background: #a7f3d0;
+  background: #bae6fd;
 }

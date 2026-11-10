@@ -80,7 +80,7 @@ export function Resumen() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 2xl:grid-cols-2">
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-stone-900">Últimos 7 días</h2>
           <Tabla<ResumenPorDia>
