@@ -37,7 +37,7 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-800 text-white">
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-emerald-600 text-white">
             <Storefront size={26} weight="fill" />
           </span>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-stone-900">Admitienda</h1>

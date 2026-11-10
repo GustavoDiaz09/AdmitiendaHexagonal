@@ -61,7 +61,7 @@ export function Estadistica({
 type Variante = 'primario' | 'secundario' | 'peligro' | 'fantasma'
 
 const CLASES_VARIANTE: Record<Variante, string> = {
-  primario: 'bg-emerald-800 text-white hover:bg-emerald-900',
+  primario: 'bg-emerald-600 text-white hover:bg-emerald-700',
   secundario: 'bg-stone-100 text-stone-800 hover:bg-stone-200',
   peligro: 'bg-red-700 text-white hover:bg-red-800',
   fantasma: 'text-stone-600 hover:bg-stone-100',
