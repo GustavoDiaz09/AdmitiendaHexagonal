@@ -1,18 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
-/* Base visual de Admitienda: fondo cálido, tipografía del sistema y números tabulares. */
+/*
+ * Paleta "papel y bosque": neutros cálidos (stone) y verde profundo (emerald)
+ * sobreescriben la paleta por defecto, así todas las vistas heredan el tema.
+ */
+@theme {
+  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+
+  --color-stone-50: #faf7f2;
+  --color-stone-100: #f3eee6;
+  --color-stone-200: #e6dfd3;
+  --color-stone-300: #d3c9b9;
+  --color-stone-400: #a79b89;
+  --color-stone-500: #837665;
+  --color-stone-600: #645a4b;
+  --color-stone-700: #4d463a;
+  --color-stone-800: #322e26;
+  --color-stone-900: #1f1c17;
+
+  --color-emerald-50: #eef5f1;
+  --color-emerald-100: #d7e9df;
+  --color-emerald-200: #b2d3c2;
+  --color-emerald-300: #85b8a0;
+  --color-emerald-400: #5a977d;
+  --color-emerald-500: #3d7a63;
+  --color-emerald-600: #2f6350;
+  --color-emerald-700: #274f41;
+  --color-emerald-800: #1f4034;
+  --color-emerald-900: #18332b;
+  --color-emerald-950: #0f211b;
+}
+
 :root {
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   color-scheme: light;
   -webkit-font-smoothing: antialiased;
 }
 
 body {
   margin: 0;
-  background: #f5f3ee;
-  color: #1c1917;
+  background: #f3eee6;
+  color: #1f1c17;
+  font-family: var(--font-sans);
+}
+
+/* Títulos con serif para dar carácter editorial a la tienda. */
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
 }
 
 ::selection {
-  background: #d1fae5;
+  background: #d7e9df;
 }
