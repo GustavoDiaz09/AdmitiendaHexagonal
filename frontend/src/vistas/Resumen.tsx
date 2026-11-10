@@ -38,7 +38,7 @@ function columnasDeTotales<T extends { ingresos: number; egresos: number; neto: 
 function Cifra({ etiqueta, valor, tono = 'text-stone-900' }: { etiqueta: string; valor: string; tono?: string }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-0.5 px-5 first:pl-0 last:pr-0">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">{etiqueta}</span>
+      <span className="text-sm font-medium text-stone-500">{etiqueta}</span>
       <span className={`truncate text-xl font-semibold tabular-nums ${tono}`}>{valor}</span>
     </div>
   )
@@ -66,7 +66,7 @@ export function Resumen() {
     <>
       <Cabecera titulo="Resumen" />
 
-      <div className="flex flex-wrap divide-stone-200 rounded-xl border border-stone-200/80 bg-white px-5 py-4 sm:flex-nowrap sm:divide-x">
+      <div className="flex flex-wrap gap-y-6 rounded-2xl bg-white px-6 py-6 sm:flex-nowrap sm:divide-x sm:divide-stone-100">
         <Cifra
           etiqueta="Saldo en caja"
           valor={resumen ? pesos(resumen.saldoCaja) : '…'}

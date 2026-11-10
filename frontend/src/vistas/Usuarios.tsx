@@ -167,7 +167,7 @@ export function Usuarios() {
 
       {esAdmin && pendientes.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-500">
+          <h2 className="text-lg font-semibold text-stone-900">
             Solicitudes pendientes ({pendientes.length})
           </h2>
           <ul className="grid gap-3 md:grid-cols-2">

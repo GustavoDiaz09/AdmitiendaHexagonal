@@ -1,59 +1,66 @@
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 /*
- * Paleta "azul y celeste": las clases "emerald" del código ahora pintan azules
- * (sobreescritura del tema), así todas las vistas heredan el color sin tocarlas.
- * Los neutros "stone" son celestes grisáceos muy claros.
+ * Sistema visual de Admitienda: un solo acento azul (sobreescribe la familia
+ * "emerald" del código para que las vistas hereden el color), neutros
+ * tintados hacia azul y un celeste muy claro de fondo.
  */
 @theme {
-  --font-sans: "Nunito", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Nunito", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Outfit", "Segoe UI", system-ui, sans-serif;
 
-  --color-stone-50: #f8fcff;
-  --color-stone-100: #eef7fc;
-  --color-stone-200: #d6e9f5;
-  --color-stone-300: #b5d4e8;
-  --color-stone-400: #86afc8;
-  --color-stone-500: #5f8aa6;
-  --color-stone-600: #46697f;
-  --color-stone-700: #33506a;
-  --color-stone-800: #22384d;
-  --color-stone-900: #142536;
+  --color-stone-50: #f8fafd;
+  --color-stone-100: #eef3f9;
+  --color-stone-200: #dde5ef;
+  --color-stone-300: #c3cfdd;
+  --color-stone-400: #94a3b8;
+  --color-stone-500: #66758b;
+  --color-stone-600: #4d5b70;
+  --color-stone-700: #3a4658;
+  --color-stone-800: #252e3d;
+  --color-stone-900: #171d2a;
 
-  --color-emerald-50: #f0f9ff;
-  --color-emerald-100: #e0f2fe;
-  --color-emerald-200: #bae6fd;
-  --color-emerald-300: #7dd3fc;
-  --color-emerald-400: #38bdf8;
-  --color-emerald-500: #0ea5e9;
-  --color-emerald-600: #0284c7;
-  --color-emerald-700: #0369a1;
-  --color-emerald-800: #075985;
-  --color-emerald-900: #0c4a6e;
-  --color-emerald-950: #082f49;
+  --color-emerald-50: #f2f7fe;
+  --color-emerald-100: #e3eefc;
+  --color-emerald-200: #c6dcf8;
+  --color-emerald-300: #9cc0f0;
+  --color-emerald-400: #6da2e6;
+  --color-emerald-500: #4a86d8;
+  --color-emerald-600: #3a6fc4;
+  --color-emerald-700: #2f5ba3;
+  --color-emerald-800: #274a84;
+  --color-emerald-900: #203c69;
+  --color-emerald-950: #15284a;
 }
 
 :root {
   color-scheme: light;
   -webkit-font-smoothing: antialiased;
-  /* Zoom general: todo el tamaño de Tailwind (rem) crece con la raíz. */
-  font-size: 20px;
+  font-size: 18px;
 }
 
 body {
   margin: 0;
-  background: #f0f9ff;
-  color: #142536;
+  background: #f1f7fc;
+  color: #171d2a;
   font-family: var(--font-sans);
 }
 
 h1,
-h2 {
-  font-family: var(--font-display);
-  font-weight: 800;
+h2,
+h3 {
+  letter-spacing: -0.02em;
 }
 
 ::selection {
-  background: #bae6fd;
+  background: #c6dcf8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }

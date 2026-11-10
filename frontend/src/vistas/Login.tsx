@@ -46,7 +46,7 @@ export function Login() {
 
         <form
           onSubmit={enviar}
-          className="space-y-5 rounded-2xl border border-stone-200/80 bg-white p-7"
+          className="space-y-5 rounded-3xl bg-white p-8 shadow-xl shadow-slate-900/5"
         >
           <Campo
             etiqueta="Usuario"
