@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { MagnifyingGlass, Plus, Trash } from '@phosphor-icons/react'
 import { useSesion } from '../almacen'
 import { api } from '../api'
+import { Tabla, type Columna } from '../componentes/Tabla'
 import { aNumero, pesosExactos } from '../formato'
 import type { Producto } from '../tipos'
 
@@ -132,57 +133,62 @@ export function Productos() {
         </button>
       </form>
 
-      <div className="overflow-x-auto rounded-2xl bg-white p-6 shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 text-left text-stone-500">
-              <th className="pb-2 font-medium">Producto</th>
-              <th className="pb-2 font-medium">Tipo</th>
-              <th className="pb-2 font-medium">Precio de venta</th>
-              <th className="pb-2 font-medium">Existencias</th>
-              {esAdmin && <th className="pb-2 font-medium">Acciones</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {productos.map((p) => (
-              <tr key={p.id} className="border-b border-stone-100">
-                <td className="py-2 text-stone-700">
-                  {p.nombreProducto}
-                  {p.enAlerta && (
-                    <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
-                      stock bajo
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 text-stone-600">{p.tipoProducto}</td>
-                <td className="py-2 text-stone-800">{pesosExactos(p.precioVenta)}</td>
-                <td className="py-2 text-stone-600">
-                  {p.cantidadStock} / mín. {p.stockMinimo}
-                </td>
-                {esAdmin && (
-                  <td className="space-x-2 py-2">
-                    <button
-                      onClick={() => abrirEdicion(p)}
-                      className="rounded-md px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => eliminar(p)}
-                      className="flex-inline items-center rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-                    >
-                      <Trash size={14} className="inline" /> Eliminar
-                    </button>
-                  </td>
+      <Tabla
+        filas={productos}
+        llave={(p) => p.id}
+        columnas={[
+          {
+            titulo: 'Producto',
+            celda: (p) => (
+              <span className="text-stone-700">
+                {p.nombreProducto}
+                {p.enAlerta && (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+                    stock bajo
+                  </span>
                 )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {productos.length === 0 && (
-          <p className="py-6 text-center text-stone-400">Sin resultados.</p>
-        )}
-      </div>
+              </span>
+            ),
+          },
+          { titulo: 'Tipo', celda: (p) => <span className="text-stone-600">{p.tipoProducto}</span> },
+          {
+            titulo: 'Precio de venta',
+            celda: (p) => <span className="text-stone-800">{pesosExactos(p.precioVenta)}</span>,
+          },
+          {
+            titulo: 'Existencias',
+            celda: (p) => (
+              <span className="text-stone-600">
+                {p.cantidadStock} / mín. {p.stockMinimo}
+              </span>
+            ),
+          },
+          ...(esAdmin
+            ? [
+                {
+                  titulo: 'Acciones',
+                  celda: (p: Producto) => (
+                    <span className="space-x-2">
+                      <button
+                        onClick={() => abrirEdicion(p)}
+                        className="rounded-md px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => eliminar(p)}
+                        className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                      >
+                        <Trash size={14} className="inline" /> Eliminar
+                      </button>
+                    </span>
+                  ),
+                } satisfies Columna<Producto>,
+              ]
+            : []),
+        ]}
+        mensajeVacio="Sin resultados."
+      />
 
       {formulario && (
         <form

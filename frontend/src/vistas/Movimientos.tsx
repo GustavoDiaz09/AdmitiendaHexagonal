@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { ArrowsDownUp, Plus, Trash } from '@phosphor-icons/react'
 import { useSesion } from '../almacen'
 import { api } from '../api'
+import { Tabla, type Columna } from '../componentes/Tabla'
 import { aNumero, fecha, pesosExactos } from '../formato'
-import type { ListadoDeMovimientos, TipoMovimiento } from '../tipos'
+import type { ListadoDeMovimientos, Movimiento, TipoMovimiento } from '../tipos'
 
 /** Caja: movimientos de ingresos y egresos con saldo histórico. */
 export function Movimientos() {
@@ -83,56 +84,64 @@ export function Movimientos() {
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl bg-white p-6 shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 text-left text-stone-500">
-              <th className="pb-2 font-medium">Fecha</th>
-              <th className="pb-2 font-medium">Tipo</th>
-              <th className="pb-2 font-medium">Descripción</th>
-              <th className="pb-2 font-medium">Monto</th>
-              {esAdmin && <th className="pb-2 font-medium" />}
-            </tr>
-          </thead>
-          <tbody>
-            {listado?.movimientos.map((m) => (
-              <tr key={m.id} className="border-b border-stone-100">
-                <td className="py-2 text-stone-500">{fecha(m.fecha)}</td>
-                <td className="py-2">
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                      m.tipo === 'INGRESO'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-red-50 text-red-700'
-                    }`}
-                  >
-                    <ArrowsDownUp size={12} />
-                    {m.tipo === 'INGRESO' ? 'Ingreso' : 'Egreso'}
-                  </span>
-                </td>
-                <td className="py-2 text-stone-700">{m.descripcion}</td>
-                <td
-                  className={`py-2 font-medium ${
-                    m.tipo === 'INGRESO' ? 'text-emerald-700' : 'text-red-700'
-                  }`}
-                >
-                  {m.tipo === 'INGRESO' ? '+' : '−'} {pesosExactos(m.monto)}
-                </td>
-                {esAdmin && (
-                  <td className="py-2 text-right">
-                    <button
-                      onClick={() => eliminar(m.id)}
-                      className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-                    >
-                      <Trash size={14} className="inline" />
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Tabla
+        filas={listado?.movimientos ?? []}
+        llave={(m) => m.id}
+        columnas={[
+          {
+            titulo: 'Fecha',
+            celda: (m) => <span className="text-stone-500">{fecha(m.fecha)}</span>,
+          },
+          {
+            titulo: 'Tipo',
+            celda: (m) => (
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                  m.tipo === 'INGRESO'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-red-50 text-red-700'
+                }`}
+              >
+                <ArrowsDownUp size={12} />
+                {m.tipo === 'INGRESO' ? 'Ingreso' : 'Egreso'}
+              </span>
+            ),
+          },
+          {
+            titulo: 'Descripción',
+            celda: (m) => <span className="text-stone-700">{m.descripcion}</span>,
+          },
+          {
+            titulo: 'Monto',
+            celda: (m) => (
+              <span
+                className={`font-medium ${
+                  m.tipo === 'INGRESO' ? 'text-emerald-700' : 'text-red-700'
+                }`}
+              >
+                {m.tipo === 'INGRESO' ? '+' : '−'} {pesosExactos(m.monto)}
+              </span>
+            ),
+          },
+          ...(esAdmin
+            ? [
+                {
+                  titulo: '',
+                  celda: (m: Movimiento) => (
+                    <span className="block text-right">
+                      <button
+                        onClick={() => eliminar(m.id)}
+                        className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                      >
+                        <Trash size={14} className="inline" />
+                      </button>
+                    </span>
+                  ),
+                } satisfies Columna<Movimiento>,
+              ]
+            : []),
+        ]}
+      />
 
       {abierto && (
         <form

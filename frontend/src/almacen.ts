@@ -34,7 +34,7 @@ export const useSesion = create<EstadoDeSesion>((set) => ({
 
   entrar: async (nombreUsuario, contrasena) => {
     const sesion = await api.iniciarSesion(nombreUsuario, contrasena)
-    localStorage.setItem('admitienda.token', sesion.token)
+    api.guardarToken(sesion.token)
     set({ usuario: sesion.usuario })
   },
 

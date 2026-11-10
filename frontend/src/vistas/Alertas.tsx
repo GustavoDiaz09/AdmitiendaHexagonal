@@ -1,7 +1,29 @@
 import { useEffect, useState } from 'react'
 import { Warning } from '@phosphor-icons/react'
 import { api } from '../api'
+import { Tabla, type Columna } from '../componentes/Tabla'
 import type { Alerta as AlertaDeInventario } from '../tipos'
+
+const COLUMNAS: Columna<AlertaDeInventario>[] = [
+  {
+    titulo: 'Producto',
+    celda: (a) => (
+      <span className="flex items-center gap-2 text-stone-700">
+        <Warning size={16} className="text-amber-600" /> {a.nombreProducto}
+      </span>
+    ),
+  },
+  { titulo: 'Tipo', celda: (a) => <span className="text-stone-600">{a.tipoProducto}</span> },
+  {
+    titulo: 'Existencias',
+    celda: (a) => <span className="font-medium text-red-700">{a.cantidadStock}</span>,
+  },
+  { titulo: 'Mínimo', celda: (a) => <span className="text-stone-600">{a.stockMinimo}</span> },
+  {
+    titulo: 'Faltante',
+    celda: (a) => <span className="text-stone-800">{a.faltante}</span>,
+  },
+]
 
 /** Productos con existencias al mínimo o menos. */
 export function Alertas() {
@@ -28,32 +50,11 @@ export function Alertas() {
           Todo el inventario está por encima del mínimo.
         </p>
       ) : (
-        <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-stone-200 text-left text-stone-500">
-                <th className="pb-2 font-medium">Producto</th>
-                <th className="pb-2 font-medium">Tipo</th>
-                <th className="pb-2 font-medium">Existencias</th>
-                <th className="pb-2 font-medium">Mínimo</th>
-                <th className="pb-2 font-medium">Faltante</th>
-              </tr>
-            </thead>
-            <tbody>
-              {alertas.map((a) => (
-                <tr key={a.id} className="border-b border-stone-100">
-                  <td className="flex items-center gap-2 py-2 text-stone-700">
-                    <Warning size={16} className="text-amber-600" /> {a.nombreProducto}
-                  </td>
-                  <td className="py-2 text-stone-600">{a.tipoProducto}</td>
-                  <td className="py-2 font-medium text-red-700">{a.cantidadStock}</td>
-                  <td className="py-2 text-stone-600">{a.stockMinimo}</td>
-                  <td className="py-2 text-stone-800">{a.faltante}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Tabla
+          filas={alertas}
+          columnas={COLUMNAS}
+          llave={(a) => a.id}
+        />
       )}
     </div>
   )

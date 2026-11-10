@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CheckCircle, Trash, XCircle } from '@phosphor-icons/react'
 import { useSesion } from '../almacen'
 import { api } from '../api'
+import { Tabla, type Columna } from '../componentes/Tabla'
 import { fecha } from '../formato'
 import type { Rol, SolicitudAdmin, Usuario } from '../tipos'
 
@@ -142,53 +143,56 @@ export function Usuarios() {
         </section>
       )}
 
-      <div className="overflow-x-auto rounded-2xl bg-white p-6 shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 text-left text-stone-500">
-              <th className="pb-2 font-medium">Usuario</th>
-              <th className="pb-2 font-medium">Rol</th>
-              <th className="pb-2 font-medium">Registrado</th>
-              {yo?.rol === 'ADMIN' && <th className="pb-2 font-medium" />}
-            </tr>
-          </thead>
-          <tbody>
-            {usuarios.map((u) => (
-              <tr key={u.id} className="border-b border-stone-100">
-                <td className="py-2 text-stone-700">{u.nombreUsuario}</td>
-                <td className="py-2">
-                  {yo?.rol === 'ADMIN' ? (
-                    <select
-                      value={u.rol}
-                      onChange={(e) => cambiarRol(u, e.target.value as Rol)}
-                      className="rounded-md border border-stone-300 px-2 py-1 text-xs"
-                    >
-                      {ROLES.map((rol) => (
-                        <option key={rol} value={rol}>
-                          {rol}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <span className="text-stone-600">{u.rol}</span>
-                  )}
-                </td>
-                <td className="py-2 text-stone-500">{fecha(u.fechaRegistro)}</td>
-                {yo?.rol === 'ADMIN' && (
-                  <td className="py-2 text-right">
-                    <button
-                      onClick={() => eliminar(u)}
-                      className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
-                    >
-                      <Trash size={14} className="inline" /> Eliminar
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Tabla
+        filas={usuarios}
+        llave={(u) => u.id}
+        columnas={[
+          {
+            titulo: 'Usuario',
+            celda: (u) => <span className="text-stone-700">{u.nombreUsuario}</span>,
+          },
+          {
+            titulo: 'Rol',
+            celda: (u) =>
+              yo?.rol === 'ADMIN' ? (
+                <select
+                  value={u.rol}
+                  onChange={(e) => cambiarRol(u, e.target.value as Rol)}
+                  className="rounded-md border border-stone-300 px-2 py-1 text-xs"
+                >
+                  {ROLES.map((rol) => (
+                    <option key={rol} value={rol}>
+                      {rol}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-stone-600">{u.rol}</span>
+              ),
+          },
+          {
+            titulo: 'Registrado',
+            celda: (u) => <span className="text-stone-500">{fecha(u.fechaRegistro)}</span>,
+          },
+          ...(yo?.rol === 'ADMIN'
+            ? [
+                {
+                  titulo: '',
+                  celda: (u: Usuario) => (
+                    <span className="block text-right">
+                      <button
+                        onClick={() => eliminar(u)}
+                        className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                      >
+                        <Trash size={14} className="inline" /> Eliminar
+                      </button>
+                    </span>
+                  ),
+                } satisfies Columna<Usuario>,
+              ]
+            : []),
+        ]}
+      />
     </div>
   )
 }

@@ -1,7 +1,34 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
-import type { Resumen as ResumenDeTienda } from '../tipos'
+import { Tabla, type Columna } from '../componentes/Tabla'
 import { pesos } from '../formato'
+import type { Resumen as ResumenDeTienda, ResumenPorDia, ResumenPorMes } from '../tipos'
+
+/** Columnas compartidas por las tablas de días y de meses. */
+function columnasDeTotales<T extends { ingresos: number; egresos: number; neto: number }>(
+  titulo: string,
+  etiqueta: (fila: T) => string,
+): Columna<T>[] {
+  return [
+    { titulo, celda: (fila) => <span className="text-stone-700">{etiqueta(fila)}</span> },
+    {
+      titulo: 'Ingresos',
+      celda: (fila) => <span className="text-emerald-700">{pesos(fila.ingresos)}</span>,
+    },
+    {
+      titulo: 'Egresos',
+      celda: (fila) => <span className="text-red-700">{pesos(fila.egresos)}</span>,
+    },
+    {
+      titulo: 'Neto',
+      celda: (fila) => (
+        <span className={`font-medium ${fila.neto < 0 ? 'text-red-700' : 'text-stone-800'}`}>
+          {pesos(fila.neto)}
+        </span>
+      ),
+    },
+  ]
+}
 
 /** Dashboard financiero: saldo de caja, por cobrar y tendencias. */
 export function Resumen() {
@@ -41,60 +68,24 @@ export function Resumen() {
         </div>
       </div>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
+      <section>
         <h2 className="mb-4 font-semibold text-stone-700">Últimos 7 días</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 text-left text-stone-500">
-              <th className="pb-2 font-medium">Día</th>
-              <th className="pb-2 font-medium">Ingresos</th>
-              <th className="pb-2 font-medium">Egresos</th>
-              <th className="pb-2 font-medium">Neto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resumen.porDia.map((dia) => (
-              <tr key={dia.fecha} className="border-b border-stone-100">
-                <td className="py-2 text-stone-700">{dia.fecha}</td>
-                <td className="py-2 text-emerald-700">{pesos(dia.ingresos)}</td>
-                <td className="py-2 text-red-700">{pesos(dia.egresos)}</td>
-                <td
-                  className={`py-2 font-medium ${dia.neto < 0 ? 'text-red-700' : 'text-stone-800'}`}
-                >
-                  {pesos(dia.neto)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Tabla
+          filas={resumen.porDia}
+          columnas={columnasDeTotales<ResumenPorDia>('Día', (dia) => dia.fecha)}
+          llave={(dia) => dia.fecha}
+          mensajeVacio="Sin movimientos esta semana."
+        />
       </section>
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
+      <section>
         <h2 className="mb-4 font-semibold text-stone-700">Últimos 12 meses</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 text-left text-stone-500">
-              <th className="pb-2 font-medium">Mes</th>
-              <th className="pb-2 font-medium">Ingresos</th>
-              <th className="pb-2 font-medium">Egresos</th>
-              <th className="pb-2 font-medium">Neto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resumen.porMes.map((mes) => (
-              <tr key={mes.mes} className="border-b border-stone-100">
-                <td className="py-2 text-stone-700">{mes.mes}</td>
-                <td className="py-2 text-emerald-700">{pesos(mes.ingresos)}</td>
-                <td className="py-2 text-red-700">{pesos(mes.egresos)}</td>
-                <td
-                  className={`py-2 font-medium ${mes.neto < 0 ? 'text-red-700' : 'text-stone-800'}`}
-                >
-                  {pesos(mes.neto)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Tabla
+          filas={resumen.porMes}
+          columnas={columnasDeTotales<ResumenPorMes>('Mes', (mes) => mes.mes)}
+          llave={(mes) => mes.mes}
+          mensajeVacio="Sin movimientos este año."
+        />
       </section>
     </div>
   )

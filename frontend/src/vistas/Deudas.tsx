@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowUUpLeft, Plus, Trash } from '@phosphor-icons/react'
 import { useSesion } from '../almacen'
 import { api } from '../api'
+import { Tabla } from '../componentes/Tabla'
 import { aNumero, fecha, pesosExactos } from '../formato'
 import type { DeudorResumen, HistorialDeDeudor } from '../tipos'
 
@@ -93,35 +94,37 @@ export function Deudas() {
         <p className="rounded-lg bg-red-50 px-4 py-3 text-red-700">{error}</p>
       )}
 
-      <div className="overflow-x-auto rounded-2xl bg-white p-6 shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-stone-200 text-left text-stone-500">
-              <th className="pb-2 font-medium">Deudor</th>
-              <th className="pb-2 font-medium">Deudas pendientes</th>
-              <th className="pb-2 font-medium">Total por cobrar</th>
-              <th className="pb-2 font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {deudores.map((d) => (
-              <tr key={d.id} className="border-b border-stone-100">
-                <td className="py-2 font-medium text-stone-700">{d.nombreDeudor}</td>
-                <td className="py-2 text-stone-600">{d.deudasPendientes}</td>
-                <td className="py-2 text-amber-700">{pesosExactos(d.totalPendiente)}</td>
-                <td className="py-2 text-right">
-                  <button
-                    onClick={() => abrirHistorial(d.id)}
-                    className="rounded-md px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
-                  >
-                    Ver historial
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Tabla
+        filas={deudores}
+        llave={(d) => d.id}
+        columnas={[
+          {
+            titulo: 'Deudor',
+            celda: (d) => <span className="font-medium text-stone-700">{d.nombreDeudor}</span>,
+          },
+          {
+            titulo: 'Deudas pendientes',
+            celda: (d) => <span className="text-stone-600">{d.deudasPendientes}</span>,
+          },
+          {
+            titulo: 'Total por cobrar',
+            celda: (d) => <span className="text-amber-700">{pesosExactos(d.totalPendiente)}</span>,
+          },
+          {
+            titulo: '',
+            celda: (d) => (
+              <span className="block text-right">
+                <button
+                  onClick={() => abrirHistorial(d.id)}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+                >
+                  Ver historial
+                </button>
+              </span>
+            ),
+          },
+        ]}
+      />
 
       {historial && (
         <section className="space-y-4 rounded-2xl bg-white p-6 shadow-sm">
