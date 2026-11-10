@@ -42,7 +42,7 @@ Hay un usuario por rol para probar los permisos. Las contraseñas son solo para 
 
 | Rol        | Usuario         | Contraseña         | Qué puede hacer                                                        |
 |------------|-----------------|--------------------|------------------------------------------------------------------------|
-| INVITADO   | `invitado`      | `invitado123`      | Sin acceso a resumen, usuarios ni solicitudes (solo catálogo público). |
+| INVITADO   | `invitado`      | `invitado123`      | Solo consulta el catálogo de productos. Sin acceso a resumen, caja, fiado, alertas ni usuarios. |
 | REGISTRADO | `registrado`    | `registrado123`    | Consultar resumen, caja, deudas y alertas. Puede solicitar ser admin.  |
 | ADMIN      | `administrador` | `administrador123` | Acceso completo: gestionar usuarios, productos, caja y fiado.          |
 

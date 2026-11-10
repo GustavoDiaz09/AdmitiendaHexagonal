@@ -16,6 +16,12 @@ public interface Sesiones {
     /** Cierra la sesión de un token (idempotente). */
     void cerrar(String token);
 
+    /**
+     * Cierra todas las sesiones de un usuario. Se usa cuando cambia su rol
+     * o su cuenta se elimina, para que el token no conserve permisos viejos.
+     */
+    void cerrarDeUsuario(long usuarioId);
+
     /** Resuelve el actor autenticado de un token, si sigue vigente. */
     Optional<Actor> actorDe(String token);
 }

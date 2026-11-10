@@ -1,5 +1,6 @@
 package com.admitienda.aplicacion;
 
+import com.admitienda.dominio.modelo.Actor;
 import com.admitienda.dominio.modelo.Credenciales;
 import com.admitienda.dominio.modelo.Deuda;
 import com.admitienda.dominio.modelo.Deudor;
@@ -18,11 +19,13 @@ import com.admitienda.dominio.puerto.salida.RepositorioProductos;
 import com.admitienda.dominio.puerto.salida.RepositorioSolicitudesAdmin;
 import com.admitienda.dominio.puerto.salida.RepositorioUsuarios;
 import com.admitienda.dominio.puerto.salida.Reloj;
+import com.admitienda.dominio.puerto.salida.Sesiones;
 import com.admitienda.dominio.puerto.salida.UnidadDeTrabajo;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -44,6 +47,34 @@ final class Falsos {
         @Override
         public long ahora() {
             return ahora;
+        }
+    }
+
+    /** Almacén de sesiones en memoria: token -> actor. */
+    static final class SesionesEnMemoria implements Sesiones {
+        final Map<String, Actor> vivas = new ConcurrentHashMap<>();
+        final AtomicLong secuencia = new AtomicLong();
+
+        @Override
+        public String abrir(Usuario usuario) {
+            String token = "token-" + secuencia.incrementAndGet();
+            vivas.put(token, new Actor(usuario.id(), usuario.nombreUsuario(), usuario.rol()));
+            return token;
+        }
+
+        @Override
+        public void cerrar(String token) {
+            vivas.remove(token);
+        }
+
+        @Override
+        public void cerrarDeUsuario(long usuarioId) {
+            vivas.values().removeIf(actor -> actor.id() == usuarioId);
+        }
+
+        @Override
+        public Optional<Actor> actorDe(String token) {
+            return Optional.ofNullable(vivas.get(token));
         }
     }
 

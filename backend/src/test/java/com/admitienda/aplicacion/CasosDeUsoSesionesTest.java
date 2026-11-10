@@ -29,7 +29,7 @@ class CasosDeUsoSesionesTest {
 
     @BeforeEach
     void preparar() {
-        casos = new CasosDeUsoSesiones(usuarios, cifrador, new SesionesFalsas());
+        casos = new CasosDeUsoSesiones(usuarios, cifrador, new Falsos.SesionesEnMemoria());
     }
 
     @Test
@@ -58,25 +58,4 @@ class CasosDeUsoSesionesTest {
                 .isInstanceOf(CredencialesInvalidasException.class);
     }
 
-    /** Sesiones falsas: token fijo, actor guardado en un mapa. */
-    private static final class SesionesFalsas implements Sesiones {
-        private final Map<String, Actor> vivas = new HashMap<>();
-
-        @Override
-        public String abrir(Usuario usuario) {
-            String token = "token-" + usuario.id();
-            vivas.put(token, new Actor(usuario.id(), usuario.nombreUsuario(), usuario.rol()));
-            return token;
-        }
-
-        @Override
-        public void cerrar(String token) {
-            vivas.remove(token);
-        }
-
-        @Override
-        public Optional<Actor> actorDe(String token) {
-            return Optional.ofNullable(vivas.get(token));
-        }
-    }
 }

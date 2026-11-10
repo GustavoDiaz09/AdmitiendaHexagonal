@@ -13,6 +13,7 @@ import com.admitienda.dominio.puerto.salida.CifradorDeContrasenas;
 import com.admitienda.dominio.puerto.salida.RepositorioSolicitudesAdmin;
 import com.admitienda.dominio.puerto.salida.RepositorioUsuarios;
 import com.admitienda.dominio.puerto.salida.Reloj;
+import com.admitienda.dominio.puerto.salida.Sesiones;
 import com.admitienda.dominio.puerto.salida.UnidadDeTrabajo;
 
 import java.util.List;
@@ -30,16 +31,18 @@ public final class CasosDeUsoUsuarios implements GestionDeUsuarios {
     private final CifradorDeContrasenas cifrador;
     private final Reloj reloj;
     private final UnidadDeTrabajo unidadDeTrabajo;
+    private final Sesiones sesiones;
 
     public CasosDeUsoUsuarios(RepositorioUsuarios repositorioUsuarios,
                               RepositorioSolicitudesAdmin repositorioSolicitudes,
                               CifradorDeContrasenas cifrador, Reloj reloj,
-                              UnidadDeTrabajo unidadDeTrabajo) {
+                              UnidadDeTrabajo unidadDeTrabajo, Sesiones sesiones) {
         this.repositorioUsuarios = repositorioUsuarios;
         this.repositorioSolicitudes = repositorioSolicitudes;
         this.cifrador = cifrador;
         this.reloj = reloj;
         this.unidadDeTrabajo = unidadDeTrabajo;
+        this.sesiones = sesiones;
     }
 
     @Override
@@ -84,7 +87,9 @@ public final class CasosDeUsoUsuarios implements GestionDeUsuarios {
                 && repositorioUsuarios.contarAdministradores() <= 1) {
             throw new ReglaDeNegocioException("No puede quedar la tienda sin administradores.");
         }
-        return repositorioUsuarios.actualizar(usuario.conRol(nuevoRol));
+        Usuario actualizado = repositorioUsuarios.actualizar(usuario.conRol(nuevoRol));
+        sesiones.cerrarDeUsuario(idUsuario);
+        return actualizado;
     }
 
     @Override
@@ -99,5 +104,6 @@ public final class CasosDeUsoUsuarios implements GestionDeUsuarios {
             repositorioSolicitudes.eliminarPorUsuario(idUsuario);
             repositorioUsuarios.eliminar(idUsuario);
         });
+        sesiones.cerrarDeUsuario(idUsuario);
     }
 }

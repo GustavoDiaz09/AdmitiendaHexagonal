@@ -29,7 +29,7 @@ class CasosDeUsoSolicitudesAdminTest {
     @BeforeEach
     void preparar() {
         gestionDeUsuarios = new CasosDeUsoUsuarios(usuarios, solicitudes, cifrador, reloj,
-                new Falsos.UnidadDirecta());
+                new Falsos.UnidadDirecta(), new Falsos.SesionesEnMemoria());
         casos = new CasosDeUsoSolicitudesAdmin(solicitudes, usuarios, reloj,
                 new Falsos.UnidadDirecta());
 

@@ -16,7 +16,12 @@ export function Usuarios() {
   const [error, setError] = useState('')
   const [aviso, setAviso] = useState('')
 
+  const esAdmin = yo?.rol === 'ADMIN'
+
   function cargar() {
+    if (!esAdmin) {
+      return
+    }
     api
       .listarUsuarios()
       .then(setUsuarios)
@@ -27,10 +32,11 @@ export function Usuarios() {
       .catch(() => setSolicitudes([]))
   }
 
-  useEffect(cargar, [])
+  useEffect(cargar, [esAdmin])
 
   async function cambiarRol(usuario: Usuario, rol: Rol) {
     setError('')
+    setAviso('')
     try {
       await api.cambiarRol(usuario.id, rol)
       cargar()
@@ -44,6 +50,7 @@ export function Usuarios() {
       return
     }
     setError('')
+    setAviso('')
     try {
       await api.eliminarUsuario(usuario.id)
       cargar()
@@ -91,7 +98,7 @@ export function Usuarios() {
         <p className="rounded-lg bg-emerald-50 px-4 py-3 text-emerald-700">{aviso}</p>
       )}
 
-      {yo?.rol !== 'ADMIN' && (
+      {yo?.rol === 'REGISTRADO' && (
         <div className="rounded-2xl bg-white p-6 text-sm shadow-sm">
           <p className="text-stone-600">
             Como usuario registrado puedes pedir el permiso de administrador para
@@ -106,7 +113,7 @@ export function Usuarios() {
         </div>
       )}
 
-      {yo?.rol === 'ADMIN' && solicitudes.some((s) => s.estado === 'PENDIENTE') && (
+      {esAdmin && solicitudes.some((s) => s.estado === 'PENDIENTE') && (
         <section className="rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="mb-4 font-semibold text-stone-700">Solicitudes pendientes</h2>
           <ul className="space-y-3">
@@ -143,6 +150,7 @@ export function Usuarios() {
         </section>
       )}
 
+      {esAdmin && (
       <Tabla
         filas={usuarios}
         llave={(u) => u.id}
@@ -153,28 +161,28 @@ export function Usuarios() {
           },
           {
             titulo: 'Rol',
-            celda: (u) =>
-              yo?.rol === 'ADMIN' ? (
-                <select
-                  value={u.rol}
-                  onChange={(e) => cambiarRol(u, e.target.value as Rol)}
-                  className="rounded-md border border-stone-300 px-2 py-1 text-xs"
-                >
-                  {ROLES.map((rol) => (
-                    <option key={rol} value={rol}>
-                      {rol}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className="text-stone-600">{u.rol}</span>
-              ),
+            celda: (u) => (
+              <select
+                value={u.rol}
+                disabled={u.id === yo?.id}
+                aria-label={`Rol de ${u.nombreUsuario}`}
+                title={u.id === yo?.id ? 'No puedes cambiar tu propio rol' : undefined}
+                onChange={(e) => cambiarRol(u, e.target.value as Rol)}
+                className="rounded-md border border-stone-300 px-2 py-1 text-xs disabled:opacity-50"
+              >
+                {ROLES.map((rol) => (
+                  <option key={rol} value={rol}>
+                    {rol}
+                  </option>
+                ))}
+              </select>
+            ),
           },
           {
             titulo: 'Registrado',
             celda: (u) => <span className="text-stone-500">{fecha(u.fechaRegistro)}</span>,
           },
-          ...(yo?.rol === 'ADMIN'
+          ...(esAdmin
             ? [
                 {
                   titulo: '',
@@ -182,7 +190,9 @@ export function Usuarios() {
                     <span className="block text-right">
                       <button
                         onClick={() => eliminar(u)}
-                        className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                        disabled={u.id === yo?.id}
+                        title={u.id === yo?.id ? 'No puedes eliminar tu propia cuenta' : undefined}
+                        className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-40"
                       >
                         <Trash size={14} className="inline" /> Eliminar
                       </button>
@@ -193,6 +203,7 @@ export function Usuarios() {
             : []),
         ]}
       />
+      )}
     </div>
   )
 }

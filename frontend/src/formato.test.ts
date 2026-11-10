@@ -23,6 +23,21 @@ describe('aNumero', () => {
   it('acepta punto decimal', () => {
     expect(aNumero('12500.5')).toBe(12500.5)
   })
+
+  it('trata el punto de tres dígitos como separador de miles', () => {
+    expect(aNumero('15.000')).toBe(15000)
+    expect(aNumero('1.500.000')).toBe(1500000)
+  })
+
+  it('combina miles con coma decimal', () => {
+    expect(aNumero('1.500,5')).toBe(1500.5)
+  })
+
+  it('devuelve NaN para texto que no es un número', () => {
+    expect(aNumero('')).toBeNaN()
+    expect(aNumero('abc')).toBeNaN()
+    expect(aNumero('12,5,3')).toBeNaN()
+  })
 })
 
 describe('fecha', () => {

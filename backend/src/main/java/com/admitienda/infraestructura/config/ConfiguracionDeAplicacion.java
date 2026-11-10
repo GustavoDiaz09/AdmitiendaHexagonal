@@ -50,8 +50,9 @@ public class ConfiguracionDeAplicacion {
     GestionDeUsuarios gestionDeUsuarios(RepositorioUsuarios usuarios,
                                         RepositorioSolicitudesAdmin solicitudes,
                                         CifradorDeContrasenas cifrador, Reloj reloj,
-                                        UnidadDeTrabajo unidadDeTrabajo) {
-        return new CasosDeUsoUsuarios(usuarios, solicitudes, cifrador, reloj, unidadDeTrabajo);
+                                        UnidadDeTrabajo unidadDeTrabajo, Sesiones sesiones) {
+        return new CasosDeUsoUsuarios(usuarios, solicitudes, cifrador, reloj, unidadDeTrabajo,
+                sesiones);
     }
 
     @Bean

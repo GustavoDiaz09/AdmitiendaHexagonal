@@ -23,13 +23,14 @@ class CasosDeUsoUsuariosTest {
     private final Falsos.SolicitudesEnMemoria solicitudes = new Falsos.SolicitudesEnMemoria();
     private final Falsos.CifradorFalso cifrador = new Falsos.CifradorFalso();
     private final Falsos.RelojFijo reloj = new Falsos.RelojFijo();
+    private final Falsos.SesionesEnMemoria sesiones = new Falsos.SesionesEnMemoria();
 
     private GestionDeUsuarios casos;
 
     @BeforeEach
     void preparar() {
         casos = new CasosDeUsoUsuarios(usuarios, solicitudes, cifrador, reloj,
-                new Falsos.UnidadDirecta());
+                new Falsos.UnidadDirecta(), sesiones);
     }
 
     @Test
@@ -110,6 +111,30 @@ class CasosDeUsoUsuariosTest {
 
         assertThat(usuarios.buscarPorId(ana.id())).isEmpty();
         assertThat(usuarios.listarTodos()).hasSize(1);
+    }
+
+    @Test
+    void cambiarRolCierraLasSesionesDelUsuario() {
+        Usuario admin1 = registrarAdmin("admin1");
+        Usuario otro = registrarAdmin("admin2");
+        Actor actor = new Actor(admin1.id(), "admin1", TipoUsuario.ADMIN);
+        String token = sesiones.abrir(otro);
+
+        casos.cambiarRol(actor, otro.id(), TipoUsuario.REGISTRADO);
+
+        assertThat(sesiones.actorDe(token)).isEmpty();
+    }
+
+    @Test
+    void eliminarCierraLasSesionesDelUsuario() {
+        Usuario admin = registrarAdmin("admin");
+        Usuario ana = casos.registrar(
+                new GestionDeUsuarios.RegistroDeUsuario("ana", "ana12345", null));
+        String token = sesiones.abrir(ana);
+
+        casos.eliminar(new Actor(admin.id(), "admin", TipoUsuario.ADMIN), ana.id());
+
+        assertThat(sesiones.actorDe(token)).isEmpty();
     }
 
     @Test

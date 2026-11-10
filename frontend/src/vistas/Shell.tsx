@@ -10,6 +10,7 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import { useSesion } from '../almacen'
+import { puedeVer } from '../permisos'
 
 const NAVES = [
   { ruta: '/resumen', nombre: 'Resumen', icono: Bank },
@@ -39,7 +40,7 @@ export function Shell() {
             <span className="text-lg font-bold text-stone-800">Admitienda</span>
           </div>
 
-          {NAVES.map(({ ruta, nombre, icono: Icono }) => (
+          {NAVES.filter(({ ruta }) => usuario && puedeVer(usuario.rol, ruta)).map(({ ruta, nombre, icono: Icono }) => (
             <NavLink
               key={ruta}
               to={ruta}

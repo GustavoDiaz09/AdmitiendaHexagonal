@@ -48,6 +48,11 @@ public final class AdaptadorSesionesEnMemoria implements Sesiones {
     }
 
     @Override
+    public void cerrarDeUsuario(long usuarioId) {
+        sesiones.values().removeIf(sesion -> sesion.usuarioId() == usuarioId);
+    }
+
+    @Override
     public Optional<Actor> actorDe(String token) {
         if (token == null || token.isBlank()) {
             return Optional.empty();

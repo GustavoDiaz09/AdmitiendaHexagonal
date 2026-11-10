@@ -162,7 +162,7 @@ Responde 204. El saldo de caja se recalcula.
 
 ```json
 {
-  "deudor": { "id": 1, "nombreDeudor": "María Pérez" },
+  "id": 1, "nombreDeudor": "María Pérez",
   "deudas": [{
     "id": 7, "monto": 20000, "saldo": 15000, "descripcion": "Mercado",
     "fecha": 1789000000000, "pagos": [{ "id": 1, "monto": 5000, "fecha": 1789000100000 }]
